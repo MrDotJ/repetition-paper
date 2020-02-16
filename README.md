@@ -8,6 +8,8 @@ there are four buildings as follow
 
 `fcs : flexible commerical services (index 3) without ess`
 
+detail information is shown as follow: 
+
 ```
 svac_info_1 = {
     'build_index': 0,
