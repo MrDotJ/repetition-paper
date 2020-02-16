@@ -1,5 +1,6 @@
 ---
 typora-copy-images-to: results\peer-to-peer energy sharing among smart grid
+typora-root-url: ./
 ---
 
 # repetition paper
@@ -104,21 +105,19 @@ The problem is optimized through ADMM described in paper 'Peer-to-Peer ..' page 
 
 the optimized result is shown as follow :
 
-![build0](C:\Users\Mr.J\Documents\GitHub\repetition-paper\results\peer-to-peer energy sharing among smart grid\build0.svg)
+![build0](results/peer-to-peer energy sharing among smart grid/build0.svg)
 
-![build1](C:\Users\Mr.J\Documents\GitHub\repetition-paper\results\peer-to-peer energy sharing among smart grid\build1.svg)
+![build1](results/peer-to-peer energy sharing among smart grid/build1.svg)
 
-![build2](C:\Users\Mr.J\Documents\GitHub\repetition-paper\results\peer-to-peer energy sharing among smart grid\build2.svg)
+![build2](results/peer-to-peer energy sharing among smart grid/build2.svg)
 
-![build3](C:\Users\Mr.J\Documents\GitHub\repetition-paper\results\peer-to-peer energy sharing among smart grid\build3.svg)
+![build3](results/peer-to-peer energy sharing among smart grid/build3.svg)
 
-![differencebuild](C:\Users\Mr.J\Documents\GitHub\repetition-paper\results\peer-to-peer energy sharing among smart grid\differencebuild.svg)
-
-![build0](F:\untitled\build0.svg)
+![differencebuild](results/peer-to-peer energy sharing among smart grid/differencebuild.svg)
 
 
 
-the first three pictures show the optimized results for each building
+the first four pictures show the optimized results for each building
 
 ​	the solid lines show the optimized load
 
