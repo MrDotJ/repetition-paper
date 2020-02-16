@@ -116,8 +116,10 @@ the optimized result is shown as follow :
 
 the first four pictures show the optimized results for each building
 
-​	the solid lines show the optimized load
+- the solid lines show the optimized load
 
-​	the three dashed lines show the exchange power with all other buildings, we can see build_3 shared the most energy with other buildings because its generator has the biggest capacity which can be seen in the configuration above
+
+- the three dashed lines show the exchange power with all other buildings, we can see build_3 shared the most energy with other buildings because its generator has the biggest capacity which can be seen in the configuration above
+
 
 the last picture shows that the algorithm converges, the f-norm of the difference between each iterator decreases quickly to zero(almost) 
