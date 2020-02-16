@@ -1,7 +1,4 @@
----
-typora-copy-images-to: results\peer-to-peer energy sharing among smart grid
-typora-root-url: ./
----
+
 
 # repetition paper
 
@@ -105,23 +102,15 @@ The problem is optimized through ADMM described in paper 'Peer-to-Peer ..' page 
 
 the optimized result is shown as follow :
 
-<https://github.com/>用户名/repository仓库名/raw/分支名master/图片文件夹名称/`***`.png or`***`.jpg
+![ss](https://github.com/MrDotJ/repetition-paper/blob/master/results/peer-to-peer/build0.svg)
 
 ![ss](https://github.com/MrDotJ/repetition-paper/blob/master/results/peer-to-peer/build1.svg)
 
+![ss](https://github.com/MrDotJ/repetition-paper/blob/master/results/peer-to-peer/build2.svg)
 
+![ss](https://github.com/MrDotJ/repetition-paper/blob/master/results/peer-to-peer/build3.svg)
 
-
-
-![build0](results/peer-to-peer energy sharing among smart grid/build0.svg)
-
-![build1](results/peer-to-peer energy sharing among smart grid/build1.svg)
-
-![build2](results/peer-to-peer energy sharing among smart grid/build2.svg)
-
-![build3](results/peer-to-peer energy sharing among smart grid/build3.svg)
-
-![differencebuild](results/peer-to-peer energy sharing among smart grid/differencebuild.svg)
+![ss](https://github.com/MrDotJ/repetition-paper/blob/master/results/peer-to-peer/differencebuild.svg)
 
 
 
