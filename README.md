@@ -103,7 +103,30 @@ https://github.com/MrDotJ/repetition-paper/tree/master/source/variational_equili
 
    拓扑采用的是相同的五节点
 
-   系统的配置如源代码所示
+   系统的具体配置如源代码所示:
+
+   ```
+   player1_info = {
+       'index': 0,
+       'power_demand_ref': 20,   # 功率参考值
+       'power_demand_max': 30,   # 功率最大值
+       'heat_ref': 15,			  # 热负荷参考值
+       'heat_min': 10,           # 热负荷最小值
+       'heat_max': 20,           # 热负荷最大值
+   
+       'heat_a': 10,			  # 热负荷舒适系数
+       'demand_a': 10,           # 电负荷舒适系数
+   
+       'gas_in_max': 20,		  # 耗气最大容量
+   
+       'exchange_max': 50,       # 最大交换功率
+       'connection': [1],		  # 连接
+       'gas_price': 2.5,		  # 气价
+       'coeff_gas_turbine_to_elec': 0.8,		# turbine的气-电转换系数
+       'coeff_gas_turbine_to_heat': 0.2,       # turbine的气-热转换系数
+       'coeff_gas_furnace': 1    # furnace的效率
+   }
+   ```
 
    计算结果如图(由于结果较多，图片仅展示1<-->0, 1<-->2, 1<-->3的结果):
 
@@ -126,7 +149,7 @@ https://github.com/MrDotJ/repetition-paper/tree/master/source/variational_equili
    #  [5.325721551707392, 5.325721551707392, 0]],
    ```
 
-    感觉可能是配置相同导致的，也可能是隐含了变分均衡的物理意义
+    感觉可能是配置相同导致的，也可能是隐含了变分均衡的物理意义，需要进一步的观察。
 
 
 
