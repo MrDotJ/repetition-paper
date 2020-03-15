@@ -149,7 +149,7 @@ https://github.com/MrDotJ/repetition-paper/tree/master/source/variational_equili
    #  [5.325721551707392, 5.325721551707392, 0]],
    ```
 
-    感觉可能是配置相同导致的，也可能是隐含了变分均衡的物理意义，需要进一步的观察。
+    感觉可能是配置相同导致的，也可能是隐含了变分均衡的物理意义，需要进一步的观察🤔
 
 
 
