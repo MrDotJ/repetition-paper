@@ -1,125 +1,126 @@
+使用Gasualdo Scutari的算法，计算出了变分均衡的值
 
-
-# repetition paper
-
-there are four buildings as follow
-
-`svac : adjustable HVAC units (index 0) with energy storage system`
-
-`sea_1 sea_2 : shiftable electrical appliances (index 1, index 2) without energy storage system`
-
-`fcs : flexible commerical services (index 3) without ess`
-
-detail information is shown as follow: 
-
-```
-svac_info_1 = {
-    'build_index': 0,
-    'T_outside': [26, 26, 28, 29, 30, 31, 32, 32, 33],
-    'C': 3.3,
-    'R': 1.35,
-    'M': 50,
-    'alpha': 1,
-    'nu': 0.185,
-    'grid_buy_price': 0.25,
-    'grid_sell_price': 0.1,
-    'connection_n': 4,
-    'exchange_power_limit': 100,
-    'cycle': 9,
-    'generator' : [3.0, 4.0, 5.0, 6.0, 6.0, 5.0, 4.0, 3.5, 3.0]
-}
-ess_info_1 = {
-    'ess_enable': 1,
-    'charge_coefficient': 0.94,
-    'charge_power_limit': 80,
-    'charge_cost': 0.01,
-    'discharge_coefficient': 1.06,
-    'discharge_power_limit': 80,
-    'discharge_cost': 0.01,
-    'storage_capacity': 340,
-    'storage_initial': 0.17647,
-    'SoC': 0.88235
-}
-ess_info_2 = {
-    'ess_enable': 0,
-    'charge_coefficient': 0.94,
-    'charge_power_limit': 80,
-    'charge_cost': 0.01,
-    'discharge_coefficient': 1.06,
-    'discharge_power_limit': 80,
-    'discharge_cost': 0.01,
-    'storage_capacity': 340,
-    'storage_initial': 0.17647,
-    'SoC': 0.88235
-}
-sea_info_1 = {
-    'build_index': 1,
-    'load_min': 10,
-    'load_max': 40,
-    'load_ref': [20, 30, 20, 30, 20, 30, 10, 20, 20],
-    'grid_buy_price': 0.25,
-    'grid_sell_price': 0.1,
-    'M': 50,
-    'D': 200,
-    'beta': 0.1,
-    'exchange_power_limit': 100,
-    'cycle': 9,
-    'generator' : [4.2, 6.0, 7.0, 7.5, 7.8, 7.5, 6.0, 4.0, 2.0],
-    'connection_n' : 4
-}
-sea_info_2 = {
-    'build_index': 2,
-    'load_min': 10,
-    'load_max': 40,
-    'load_ref': [20, 40, 30, 40, 30, 30, 10, 20, 20],
-    'grid_buy_price': 0.25,
-    'grid_sell_price': 0.1,
-    'M': 50,
-    'D': 240,
-    'beta': 0.1,
-    'exchange_power_limit': 100,
-    'cycle': 9,
-    'connection_n' : 4,
-    'generator': [5.2, 7.0, 8.3, 9.0, 9.2, 8.2, 7.6, 5.4, 3.0]
-}
-fcs_info_3 = {
-    'build_index': 3,
-    'lam': 3,
-    'load_min': 15,
-    'load_max': 35,
-    'grid_buy_price': 0.25,
-    'grid_sell_price': 0.1,
-    'connection_n': 4,
-    'cycle': 9,
-    'exchange_power_limit': 100,
-    'generator': [60, 80, 100 , 110, 112, 100, 90, 60, 40]
-}
-```
-
-***
-
-The problem is optimized through ADMM described in paper 'Peer-to-Peer ..' page 5
-
-the optimized result is shown as follow :
-
-![ss](https://github.com/MrDotJ/repetition-paper/blob/master/results/peer-to-peer/build0.svg)
-
-![ss](https://github.com/MrDotJ/repetition-paper/blob/master/results/peer-to-peer/build1.svg)
-
-![ss](https://github.com/MrDotJ/repetition-paper/blob/master/results/peer-to-peer/build2.svg)
-
-![ss](https://github.com/MrDotJ/repetition-paper/blob/master/results/peer-to-peer/build3.svg)
-
-![ss](https://github.com/MrDotJ/repetition-paper/blob/master/results/peer-to-peer/differencebuild.svg)
+源代码如链接🔗所示：
 
 
 
-the first four pictures show the optimized results for each building
+测试系统及结果：(绿线表明收敛曲线)
 
-- the solid lines show the optimized load
+1. 简单的2节点系统
+
+   ```
+   player1_info = {
+       'index': 0,
+       'demand_ref': 15,  # 基准负荷
+       'supply_max': 5,   # 最大生产功率
+       'demand_max': 25,  #最大负荷  下同
+   }
+   player2_info = {
+       'index': 1,
+       'demand_ref': 20,
+       'supply_max': 45,
+       'demand_max': 30,
+   }
+   ```
+
+   系统的收敛曲线如图所示：
+
+   
+
+2. 三节点系统
+
+   其系统全连接，具体配置如下
+
+   ```
+   player1_info = {
+       'index': 0,
+       'demand_ref': 20,
+       'supply_max': 10,
+       'demand_max': 30,
+   }
+   player2_info = {
+       'index': 1,
+       'demand_ref': 20,
+       'supply_max': 30,
+       'demand_max': 25,
+   }
+   player3_info = {
+       'index': 2,
+       'demand_ref': 20,
+       'supply_max': 30,
+       'demand_max': 25,
+   }
+   ```
+
+   该系统三节点互联，系统得到的收敛曲线如图
+
+   其中2，3节点配置完全相同，所以曲线有重合
+
+   改变不同节点的价格成本情况，
+
+   ```
+   player2_info = {
+       'supply_a': 2.5,
+       'supply_b': 0.1,
+       'demand_a': 10,
+   }
+   player3_info = {
+       supply_a': 3,
+       'supply_b': 0.1,
+       'demand_a': 10,
+   }
+   ```
+
+   得到的新的均衡如下：
+
+   
+
+3. 五节点系统
+
+   五节点系统拓扑如图：
+
+   ```
+   #    0     1      2
+   #    o-----o------o
+   #          |      |
+   #          o      o
+   #          3      4
+   ```
+
+   系统配置如源代码所示
+
+   计算结果如图(由于结果较多，图片仅展示1<-->0, 1<-->2, 1<-->3的结果):
+
+   
+
+4. 综合能源(气热/无储能)五节点系统
+
+   主要参考了老师的文章《A Generalized Nash Equilibrium Approach for Autonomous Energy Management of Residential Energy Hubs》对于Energy Hub的建模，其中包括gas--gas turbine, gas--gas furnace, 但是忽略了与公网的连接，仅保留区域间的互联，并且忽略了所有的储能装置，
+
+   拓扑采用的是相同的五节点
+
+   系统的配置如源代码所示
+
+   计算结果如图(由于结果较多，图片仅展示1<-->0, 1<-->2, 1<-->3的结果):
+
+5. 一个有趣的现象是，对于情况2(三节点)中最终结果，施加函数：
+
+   Price = Constant - Coefficient * (Power_real - Power_reference)， 即
+
+   ```
+   new_price = old_price - 0.1 * (demand_value - self.demand_ref)
+                                #    优化结果         参考值
+   ```
+
+   发现结果基本相同
+
+   ```
+   #[[[0, 5.3261481100402515, 5.3261481100402515],
+   #  [5.325721551707392, 0, 5.325721551707392],
+   #  [5.325721551707392, 5.325721551707392, 0]],
+   ```
+
+    感觉可能是配置相同导致的，也可能是隐含了变分均衡的物理意义
 
 
-- the three dashed lines show the exchange power with all other buildings, we can see build_3 shared the most energy with other buildings because its generator has the biggest capacity which can be seen in the configuration above
 
-
-the last picture shows that the algorithm converges, the f-norm of the difference between each iterator decreases quickly to zero(almost) 
