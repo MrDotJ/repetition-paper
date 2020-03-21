@@ -9,6 +9,11 @@ https://github.com/MrDotJ/repetition-paper/tree/master/source/variational_equili
 1. 简单的2节点系统
 
    ```
+   #   o------o
+   #   0      1
+   ```
+
+   ```
    player1_info = {
        'index': 0,
        'demand_ref': 15,  # 基准负荷
@@ -23,6 +28,29 @@ https://github.com/MrDotJ/repetition-paper/tree/master/source/variational_equili
    }
    ```
 
+   目标函数:
+   $$
+   f_{i}(x) = P_{cost} + P_{utility} + P_{exchange}
+   $$
+
+   $$
+   P_{cost}(x_{power}) = a*x_{power}^{2} + b*x_{power}
+   $$
+
+   $$
+   P_{utility}(x_{demand}) = (x_{demand} - x_{reference})^{2}
+   $$
+
+   $$
+   P_{exchange} = \sum_{j\in\Omega_i}price_{ij} * x_{j}
+   $$
+
+   $$
+   x_{ij}+x_{ji} =0 \quad\quad  \forall {(i,j)\in T}
+   $$
+
+   
+
    系统的收敛曲线如图所示：
 
    ![image](results/variational_equilibrium/2-node-elec.svg)
@@ -30,6 +58,14 @@ https://github.com/MrDotJ/repetition-paper/tree/master/source/variational_equili
 2. 三节点系统
 
    其系统全连接，具体配置如下
+
+   ```
+   #   1   2           
+   #   o---o
+   #    \ /  
+   #     o
+   #     0  
+   ```
 
    ```
    player1_info = {
@@ -102,6 +138,37 @@ https://github.com/MrDotJ/repetition-paper/tree/master/source/variational_equili
    主要参考了老师的文章《A Generalized Nash Equilibrium Approach for Autonomous Energy Management of Residential Energy Hubs》👈对于Energy Hub的建模，其中包括gas--gas turbine, gas--gas furnace, 但是忽略了与公网的连接，仅保留区域间的互联，并且忽略了所有的储能装置
 
    拓扑采用的是相同的五节点
+   $$
+   f_{i}(x) = P_{cost} + P_{utility} + P_{exchange}
+   $$
+
+   $$
+   P_{cost} = \lambda_{gas} * M_{gas}
+   \\
+   Turbine + Furance = M_{gas}
+   $$
+
+   $$
+   P_{utility} = \alpha(Power_{demand} - Power_{refer})^{2} + \beta(Heat_{demand} - Heat_{refer})^{2}
+   $$
+
+   $$
+   Power_{demand} = Turbine * \eta_{1} + Power_{exchange}
+   $$
+
+   $$
+   Heat_{demand} = Turbine*\eta_{2} + Furnace
+   $$
+
+   $$
+   P_{exchange} = \sum_{j\in\Omega_i}\lambda_{ij} * x_{j}
+   $$
+
+   $$
+   x_{ij}+x_{ji} =0 \quad\quad  \forall {(i,j)\in T}
+   $$
+
+   
 
    系统的具体配置如源代码所示:
 
