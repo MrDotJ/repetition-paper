@@ -21,6 +21,7 @@ g_link = 1
 player_num = 2
 injection = [0, 0]
 
+
 class Region:
     def __init__(self, index, X_raw, node_info, connection_info):
         self.index = index
@@ -207,7 +208,7 @@ class Region:
             connect_to = self.connection_area[i]  # [2,3,6] 表示连接到的区域
             thisvar_inside = self.angles_inside[self.connection_index[i]]  # 与 connect_to 区域相连的线路的内部的相角
             thatvar_inside = self.angles_outside[i]
-            thisvar_outside = thisvar_outside = g_angles[connect_to][g_connection[connect_to].index(self.index) * 2 + 1]
+            thisvar_outside = g_angles[connect_to][g_connection[connect_to].index(self.index) * 2 + 1]
             thatvar_outside = g_angles[connect_to][g_connection[connect_to].index(self.index) * 2]
             norm_addition = norm_addition + \
                             (thisvar_inside - self.old_value[2 * i]) * \
@@ -216,10 +217,11 @@ class Region:
                             (thatvar_inside - self.old_value[2 * i + 1])
             if self.index != 0:
                 norm_addition = norm_addition + \
-                                10 * ((thisvar_inside + self.free_var) - thisvar_outside) * \
+                                100 * ((thisvar_inside + self.free_var) - thisvar_outside) * \
                                 ((thisvar_inside + self.free_var) - thisvar_outside) + \
-                                10 * ((thatvar_outside + self.free_var) - thatvar_outside) * \
-                                ((thatvar_outside + self.free_var) - thatvar_outside)
+                                100 * ((thatvar_inside + self.free_var) - thatvar_outside) * \
+                                ((thatvar_inside + self.free_var) - thatvar_outside)
+                # select the best reference point
         # add difference
 
         self.object_addition = dual_addition + \
@@ -393,7 +395,7 @@ def factory():
             'min_load': 1,
             'max_load': 1,
             'min_power': 1,
-            'max_power': 1,
+            'max_power': 10,
             'load_coeff': 1,
             'load_ref': 1,
             'power_coeff_a': 0.1,
@@ -470,7 +472,8 @@ def factory():
 def calculate_NE():
     global g_lam
     count_best_response = 0
-    while count_best_response < 30:
+    while count_best_response < 60:
+        # TODO: maybe 30 is a little small
         for i, player in enumerate(g_players):
             # get the data for the player i
             player.update_model(g_tao)  # 填充x_i 以及lam_i
@@ -498,18 +501,19 @@ def start():
         player.build_model()
     # start the outer loop
     outer_loop_count = 0
-    while outer_loop_count < 100:
+    while outer_loop_count < 20:
         # give xn, lam_n, calculate the equilibrium
         calculate_NE()
         # 现在我们得到了一个新的NE，我们应该把这个NE设为参照值
         set_oldValue()
         outer_loop_count = outer_loop_count + 1
-        result_plt.append(g_angles[0][0])
-        result_plt1.append(g_angles[1][0])
-        result_plt2.append(g_angles[0][0] - g_angles[1][0])
-        #result_plt.append(injection[0])
-        #result_plt1.append(injection[1])
-        #result_plt2.append(g_lam[0] + g_lam[1])
+        # result_plt.append(g_angles[0][0])
+        # result_plt1.append(g_angles[1][0])
+        # result_plt2.append(g_angles[0][0] - g_angles[1][0])
+        result_plt.append(injection[0])
+        result_plt1.append(injection[1])
+        result_plt2.append(injection[0] + injection[1])
+        # result_plt2.append(g_lam[0] + g_lam[1])
         # set all value in g_ex to zero
         g_angles = [[0] * len(sublist) for sublist in g_angles]
     plt.plot(result_plt, label='0->1')
