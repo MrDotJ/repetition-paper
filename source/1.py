@@ -384,18 +384,6 @@ class PowerNet:
             result_list.append(per_load)
         return np.array(result_list)
 
-    def gen_connected_with(self, node):  # list of expression
-        result = np.where(np.array(self.gen_gas_index) == node)
-        if result[0].size == 0:
-            return np.array([[0] * self.T])
-        result_list = []
-        for i in result[0]:
-            per_gen = []
-            for time in range(self.T):
-                per_gen.append(self.gen_gas_power[i, time] / self.gen_gas_efficiency[i])
-            result_list.append(per_gen)
-        return np.array(result_list)
-
     def p2g_connected_with(self, node):
         return np.array([[0] * self.T])
 
@@ -422,17 +410,29 @@ class PowerNet:
                 per_in.append(self.gas_flow_in[i, time])
             result_list.append(per_in)
         return np.array(result_list)
-
-    def gas_to_power_connected_with(self, node):
-        result = np.where(np.array(self.gen_gas_index_power) == node)
+    
+    def gen_connected_with(self, node):  # list of expression
+        result = np.where(np.array(self.gen_gas_index) == node)         # this node is gas node
         if result[0].size == 0:
             return np.array([[0] * self.T])
         result_list = []
         for i in result[0]:
-            per_in = []
+            per_gen = []
             for time in range(self.T):
-                per_in.append(self.gen_gas_power[i, time])
-            result_list.append(per_in)
+                per_gen.append(self.gen_gas_power[i, time] / self.gen_gas_efficiency[i])    # change to gas
+            result_list.append(per_gen)
+        return np.array(result_list)
+    
+    def gas_to_power_connected_with(self, node):
+        result = np.where(np.array(self.gen_gas_index_power) == node)       # this node is power node
+        if result[0].size == 0:
+            return np.array([[0] * self.T])
+        result_list = []
+        for i in result[0]:
+            per_gen = []
+            for time in range(self.T):
+                per_gen.append(self.gen_gas_power[i, time])         # just power 
+            result_list.append(per_gen)
         return np.array(result_list)
 
     # ----------- auxiliary key function ----------------------------
@@ -1068,8 +1068,8 @@ def getPowerNet():
         'gen_gas_index': [2],          # the gas generator index in the gas system
         'gen_gas_index_power': [3],  # the gas generator index in the power system
         'gen_gas_min': [0],  # this is power
-        'gen_gas_max': [1],               # this is gas or power ?
-        'gen_gas_efficiency': [10],
+        'gen_gas_max': [0.5],               # this is gas or power ?
+        'gen_gas_efficiency': [10],         # 0.05 gas => 0.5 power
         'gas_connection_index': [2],  # the gas generator index in the gas system
     }
     gas_line_info_0 = {
@@ -1142,7 +1142,7 @@ def getPowerNet():
         'gen_gas_index': [2],       # the gas generator index in the gas system
         'gen_gas_index_power': [2],   # the gas generator index in the power system
         'gen_gas_min': [0],  # this is power
-        'gen_gas_max': [1],
+        'gen_gas_max': [0.5],
         'gen_gas_efficiency': [10],
         'gas_connection_index': [2],  # the gas generator index in the gas system
     }
