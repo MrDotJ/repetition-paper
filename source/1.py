@@ -410,7 +410,7 @@ class PowerNet:
                 per_in.append(self.gas_flow_in[i, time])
             result_list.append(per_in)
         return np.array(result_list)
-    
+
     def gen_connected_with(self, node):  # list of expression
         result = np.where(np.array(self.gen_gas_index) == node)         # this node is gas node
         if result[0].size == 0:
@@ -422,7 +422,7 @@ class PowerNet:
                 per_gen.append(self.gen_gas_power[i, time] / self.gen_gas_efficiency[i])    # change to gas
             result_list.append(per_gen)
         return np.array(result_list)
-    
+
     def gas_to_power_connected_with(self, node):
         result = np.where(np.array(self.gen_gas_index_power) == node)       # this node is power node
         if result[0].size == 0:
@@ -431,7 +431,7 @@ class PowerNet:
         for i in result[0]:
             per_gen = []
             for time in range(self.T):
-                per_gen.append(self.gen_gas_power[i, time])         # just power 
+                per_gen.append(self.gen_gas_power[i, time])         # just power
             result_list.append(per_gen)
         return np.array(result_list)
 
