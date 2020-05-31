@@ -1042,7 +1042,7 @@ def getPowerNet():
         'load_react_min': [0.1, 0.2, 0.2, 0.1, 0.3, 0.1, 0.2, 0.1, 0],  # 1.3
         'load_react_max': [0.15, 0.25, 0.25, 0.15, 0.35, 0.15, 0.25, 0.15, 100000],  # 1.7
         'bus_num_outside': 1,
-        'connection_index': [1],
+        'connection_index': [1],        # the outer area power/gas connect with this index
     }
     line_info_0 = {
         'line_num': 11 + 1,
@@ -1116,7 +1116,7 @@ def getPowerNet():
         'load_react_min': [0.1, 0.2, 0.2, 0.1, 0.3, 0.1, 0.2, 0.1, 0],  # 1.3
         'load_react_max': [0.15, 0.25, 0.25, 0.15, 0.35, 0.15, 0.25, 0.15, 100000],  # 1.7
         'bus_num_outside': 1,
-        'connection_index': [1],
+        'connection_index': [1],            # the outer area power/gas connect with this index
     }
     line_info_1 = {
         'line_num': 11 + 1,
