@@ -1030,7 +1030,7 @@ def getPowerNet():
         'gen_react_min': [0, 0, 0, 0],  # 0
         'gen_react_max': [0.4, 0.3, 0.2, 1000000],  # 1.2
         'gen_cost_a': [0.1, 0.13, 0.09, 0.5],
-        'gen_cost_b': [0.01, 0.01, 0.01, ],
+        'gen_cost_b': [0.01, 0.01, 0.01, 0],
         'gen_cost_c': [0.1, 0.1, 0.1, 0],
         'bus_num': 12 + 1,
         'bus_voltage_min': [0.9 * 1] * (12 + 1),
