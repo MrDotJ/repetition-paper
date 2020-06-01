@@ -1068,9 +1068,8 @@ def getPowerNet():
         'gen_gas_index': [2],          # the gas generator index in the gas system
         'gen_gas_index_power': [3],  # the gas generator index in the power system
         'gen_gas_min': [0],  # this is power
-        'gen_gas_max': [0.5],               # this is gas or power ?
+        'gen_gas_max': [0.1],               # this is power
         'gen_gas_efficiency': [10],         # 0.05 gas => 0.5 power
-        'gas_connection_index': [2],  # the gas generator index in the gas system
     }
     gas_line_info_0 = {
         'weymouth': [1] * (2 + 1),
@@ -1142,9 +1141,8 @@ def getPowerNet():
         'gen_gas_index': [2],       # the gas generator index in the gas system
         'gen_gas_index_power': [2],   # the gas generator index in the power system
         'gen_gas_min': [0],  # this is power
-        'gen_gas_max': [0.5],
+        'gen_gas_max': [0.1],
         'gen_gas_efficiency': [10],
-        'gas_connection_index': [2],  # the gas generator index in the gas system
     }
     gas_line_info_1 = {
         'weymouth': [1] * (2 + 1),
