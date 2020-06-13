@@ -1,0 +1,421 @@
+import gurobipy as gurobi
+import matplotlib.pyplot as plt
+
+# arbitrary topology
+# more variables, complex model
+
+#   price   [[00 01 02 03]
+#            [10 11 12 13]
+#            [20 21 22 23]
+#            [30 31 32 33]]     其中，ii均为0
+#   g_ex  [[01 02 03]
+#          [10  12 13]
+#          [20 21  23]
+#          [30 31 32 ]]
+#   g_lam  [01+10 02+20 03+30 12+21 13+31 23+32] * 2
+#   g_lam_index =
+#   g_connection = [[1 2 3]
+#                  [0 2 3]
+#                  [0 1 3]
+#                  [0 1 2]]
+#    0     1      2
+#    o-----o------o
+#          |      |
+#          o      o
+#          3      4
+price = [[0, 5, 5, 5, 5],
+         [5, 0, 5, 5, 5],
+         [5, 5, 0, 5, 5],
+         [5, 5, 5, 0, 5],
+         [5, 5, 5, 5, 0]]  # 你要注意这都是买的价格
+g_tao = 10
+g_ex = [[0],
+        [0, 0, 0],
+        [0, 0],
+        [0],
+        [0]]
+#        01 01 12 12 13 13 24 24
+g_lam = [0, 0, 0, 0, 0, 0, 0, 0]  # 01 01 02 02 12 12
+g_lam_index = [[0],
+               [0, 2, 4],
+               [2, 6],
+               [4],
+               [6]]
+g_connection = [[1],
+                [0, 2, 3],
+                [1, 4],
+                [1],
+                [2]]
+g_link = 4
+player_num = 5
+
+
+class Player:
+    def __init__(self, index, power_demand_ref, power_demand_max, exchange_max,
+                 connection, demand_a, gas_price, gas_in_max,
+                 heat_min, heat_max, heat_a, heat_ref, coeff_gas_turbine_to_elec,
+                 coeff_gas_turbine_to_heat, coeff_gas_furnace):
+        self.index = index
+        self.power_demand_ref = power_demand_ref
+        self.power_demand_max = power_demand_max
+        self.exchange_max = exchange_max
+        self.connection = connection
+        self.demand_a = demand_a
+        self.gas_price = gas_price
+        self.gas_in_max = gas_in_max
+        self.heat_min = heat_min
+        self.heat_max = heat_max
+        self.heat_a = heat_a
+        self.heat_ref = heat_ref
+        self.coeff_gas_turbine_to_elec = coeff_gas_turbine_to_elec
+        self.coeff_gas_turbine_to_heat = coeff_gas_turbine_to_heat
+        self.coeff_gas_furnace = coeff_gas_furnace
+        # model
+        self.model = gurobi.Model()
+        self.power_demand = None
+        self.exchange = None
+        #   gas system
+        self.gas_in = None
+        #   heat system
+        self.heat_out = None
+        self.gas_for_turbine = None
+        self.gas_for_furnace = None
+        # model object
+        self.object_basic = None
+        self.object_addition = None
+        self.object = None
+        # old value
+        self.old_value = [0] * len(self.connection)
+
+    def build_model(self):
+        global price
+        index = self.index
+        objects = []
+        constrains = []
+        # construct model
+        self.power_demand = self.model.addVar(lb=0, ub=self.power_demand_max, name='power_demand' + str(index))
+        self.exchange = self.model.addVars(len(self.connection), lb=-1 * self.exchange_max,
+                                           ub=self.exchange_max, name='exchange' + str(index))
+
+        # gas system, gas_in_max define the max capacity
+        self.gas_in = self.model.addVar(lb=0, ub=self.gas_in_max, name='gas_in')
+        self.gas_for_turbine = self.model.addVar(lb=0, ub= self.gas_in_max, name='gas_for_turbine')
+        self.gas_for_furnace = self.model.addVar(lb=0, ub= self.gas_in_max, name='gas_for_furnace')
+
+        self.model.addConstr(self.gas_for_furnace + self.gas_for_turbine <= self.gas_in_max)
+        self.heat_out = self.model.addVar(lb=self.heat_min, ub=self.heat_max, name='heat_output')
+
+        # origin code
+        # construct cost objective
+        # supply_cost = self.supply_a * self.supply + self.supply_b * self.supply * self.supply
+        supply_cost = self.gas_price * self.gas_in
+        objects.append(supply_cost)
+        load_cost = self.demand_a * (self.power_demand - self.power_demand_ref) * \
+                    (self.power_demand - self.power_demand_ref)
+        objects.append(load_cost)
+        heat_cost = self.heat_a * (self.heat_out - self.heat_ref) * (self.heat_out - self.heat_ref)
+        objects.append(heat_cost)
+        exchange_cost = 0
+        pos = 0
+        for i in self.connection:
+            exchange_cost = exchange_cost + price[index][i] * self.exchange[pos]
+            pos = pos + 1
+        objects.append(-1 * exchange_cost)
+
+        # add power balance constrain
+        power_balance = self.model.addConstr(
+            lhs=self.gas_for_turbine * self.coeff_gas_turbine_to_elec,
+            rhs=self.power_demand + gurobi.quicksum(self.exchange[i]
+                                                    for i in range(len(self.connection))),
+            sense=gurobi.GRB.EQUAL,
+            name='Region_' + str(index) + '_power_balance'
+        )
+        constrains.append(power_balance)
+        # heat balance
+        heat_balance = self.model.addConstr(
+            lhs=self.gas_for_turbine * self.coeff_gas_turbine_to_heat +
+            self.gas_for_furnace * self.coeff_gas_furnace,
+            rhs=self.heat_out,
+            sense=gurobi.GRB.EQUAL,
+            name='heat_balance' + str(index))
+        constrains.append(heat_balance)
+
+        # add object
+        self.object_basic = sum(objects)
+
+    def update_model(self, tao):  #
+        # ex_i 是从小到大所有向i的数据的list，比如说是[01, 21, 31, 51], 相对应的 变量也应该是[10 12 13 15]
+        # construct dual object
+        # get lam for i
+        lams = []
+        for i in g_lam_index[self.index]:  # 获取用户i所对应的全部lam 索引
+            lams.append(g_lam[i])
+            lams.append(g_lam[i + 1])
+        duals = []
+        for i in range(len(self.connection)):  #
+            # i:3 ==> self.connection[i]:6 ==> g_connection[6].index(self.index)
+            connect_to = self.connection[i]  #
+            duals.append(self.exchange[i] + g_ex[connect_to][g_connection[connect_to].index(self.index)])  #
+            duals.append(-self.exchange[i] - g_ex[connect_to][g_connection[connect_to].index(self.index)])
+        dual_addition = sum([a * b for a, b in zip(duals, lams)])
+        # construct norm object
+        norm_addition = gurobi.quicksum((self.exchange[i] - self.old_value[i]) *
+                                        (self.exchange[i] - self.old_value[i])
+                                        for i in range(len(self.connection)))
+        self.object_addition = dual_addition + \
+                               tao / 2 * norm_addition
+        self.object = self.object_basic + self.object_addition
+        self.model.setObjective(self.object)
+
+    def optimize_model(self):  # calculate the response
+        self.model.optimize()
+        exchange_value = []
+        for i in range(len(self.connection)):
+            exchange_value.append(self.exchange[i].getAttr('X'))
+        return exchange_value
+
+    def set_old_value(self, old):  # 01 02 03 04
+        pos = 0
+        for i in range(len(self.connection)):  # 0 1 2 3 4
+            self.old_value[i] = old[pos]
+            pos = pos + 1
+
+
+class playerNp1:
+    def __init__(self):
+        self.old_value = [0] * (g_link * 2)
+
+    def optimize(self, tao):  # [[01 02] [10 12] [20 21]]
+        model = gurobi.Model()
+        gx = []
+        for i in range(len(g_connection)):  # build_i
+            for connect_to in g_connection[i]:  # 0_1
+                if i < connect_to:
+                    gx.append(g_ex[i][g_connection[i].index(connect_to)] +
+                              g_ex[connect_to][g_connection[connect_to].index(i)])
+                    # 我得到了第i个建筑到第k个建筑的流量，其中第k个建筑在第i个建筑中的索引是index
+                    gx.append(-1 * g_ex[i][g_connection[i].index(connect_to)] -
+                              g_ex[connect_to][g_connection[connect_to].index(i)])
+        duals = model.addVars(len(gx))
+        # duals * gx
+        dual_express = gurobi.quicksum(
+            duals[i] * gx[i] for i in range(len(gx)))
+        norm_express = gurobi.quicksum(
+            (duals[i] - self.old_value[i]) * (duals[i] - self.old_value[i])
+            for i in range(len(gx)))
+        objective = -1 * dual_express + tao / 2 * norm_express
+        model.setObjective(objective)
+        model.optimize()
+        dual_value = []
+        for i in range(len(gx)):
+            dual_value.append(duals[i].getAttr('X'))
+        return dual_value
+
+    def set_old_value(self, old_value):
+        self.old_value = old_value.copy()
+
+
+def getPlayer(player_info):
+    instance = Player(
+        player_info['index'],
+        player_info['power_demand_ref'],
+        player_info['power_demand_max'],
+        player_info['exchange_max'],
+        player_info['connection'],
+        player_info['demand_a'],
+        player_info['gas_price'],
+        player_info['gas_in_max'],
+        player_info['heat_min'],
+        player_info['heat_max'],
+        player_info['heat_a'],
+        player_info['heat_ref'],
+        player_info['coeff_gas_turbine_to_elec'],
+        player_info['coeff_gas_turbine_to_heat'],
+        player_info['coeff_gas_furnace']
+    )
+    return instance
+
+
+def factory():
+    player1_info = {
+        'index': 0,
+        'power_demand_ref': 20,
+        'power_demand_max': 30,
+        'heat_ref': 15,
+        'heat_min': 10,
+        'heat_max': 20,
+
+        'heat_a': 10,
+        'demand_a': 10,
+
+        'gas_in_max': 20,
+
+        'exchange_max': 50,
+        'connection': [1],
+        'gas_price': 2.5,
+        'coeff_gas_turbine_to_elec': 0.8,
+        'coeff_gas_turbine_to_heat': 0.2,
+        'coeff_gas_furnace': 1
+    }
+    player2_info = {
+        'index': 1,
+        'power_demand_ref': 20,
+        'power_demand_max': 30,
+        'heat_ref': 10,
+        'heat_min': 5,
+        'heat_max': 15,
+
+        'heat_a': 10,
+        'demand_a': 10,
+
+        'gas_in_max': 80,
+
+        'exchange_max': 50,
+        'connection': [0, 2, 3],
+        'gas_price': 2.5,
+        'coeff_gas_turbine_to_elec': 0.8,
+        'coeff_gas_turbine_to_heat': 0.2,
+        'coeff_gas_furnace': 1
+    }
+    player3_info = {
+        'index': 2,
+        'power_demand_ref': 20,
+        'power_demand_max': 30,
+        'heat_ref': 15,
+        'heat_min': 10,
+        'heat_max': 20,
+
+        'heat_a': 10,
+        'demand_a': 10,
+
+        'gas_in_max': 60,
+
+        'exchange_max': 50,
+        'connection': [1, 4],
+        'gas_price': 2.5,
+        'coeff_gas_turbine_to_elec': 0.8,
+        'coeff_gas_turbine_to_heat': 0.2,
+        'coeff_gas_furnace': 1
+    }
+    player4_info = {
+        'index': 3,
+        'power_demand_ref': 20,
+        'power_demand_max': 30,
+        'heat_ref': 15,
+        'heat_min': 10,
+        'heat_max': 20,
+
+        'heat_a': 10,
+        'demand_a': 10,
+
+        'gas_in_max': 10,
+
+        'exchange_max': 50,
+        'connection': [1],
+        'gas_price': 2.5,
+        'coeff_gas_turbine_to_elec': 0.8,
+        'coeff_gas_turbine_to_heat': 0.2,
+        'coeff_gas_furnace': 1
+    }
+    player5_info = {
+        'index': 4,
+        'power_demand_ref': 20,
+        'power_demand_max': 30,
+        'heat_ref': 15,
+        'heat_min': 10,
+        'heat_max': 20,
+
+        'heat_a': 10,
+        'demand_a': 10,
+
+        'gas_in_max': 20,
+
+        'exchange_max': 50,
+        'connection': [2],
+        'gas_price': 2.5,
+        'coeff_gas_turbine_to_elec': 0.8,
+        'coeff_gas_turbine_to_heat': 0.2,
+        'coeff_gas_furnace': 1
+    }
+    player1 = getPlayer(player1_info)
+    player2 = getPlayer(player2_info)
+    player3 = getPlayer(player3_info)
+    player4 = getPlayer(player4_info)
+    player5 = getPlayer(player5_info)
+    playerN1 = playerNp1()
+    return [player1, player2, player3, player4, player5, playerN1]
+
+
+def norm_ex(list1, list2):
+    sum_value = 0
+    for i in range(len(list1)):
+        sum_value = sum_value + (list1[i] - list2[i]) * (list1[i] - list2[i])
+    return sum_value
+
+
+def calculate_NE():
+    global g_lam
+    count_best_response = 0
+    while count_best_response < 20:
+        for i, player in enumerate(g_players):
+            # get the data for the player i
+            player.update_model(g_tao)  # 填充x_i 以及lam_i
+            player_i_result = player.optimize_model()
+            g_ex[i] = player_i_result.copy()
+            # update the lam_dual variable
+            g_lam = g_playerN1.optimize(g_tao)
+            # update the response
+        count_best_response = count_best_response + 1
+
+
+def set_oldValue():
+    for i, player in enumerate(g_players):
+        player.set_old_value(g_ex[i])
+    g_playerN1.set_old_value(g_lam)
+
+
+def start():
+    global g_ex
+    result_plt = []
+    result_plt1 = []
+    result_plt2 = []
+    result_plt3 = []
+    result_plt4 = []
+    result_plt5 = []
+    result_plt6 = []
+    # initial
+    for player in g_players:
+        player.build_model()
+    # start the outer loop
+    outer_loop_count = 0
+    while outer_loop_count < 200:
+        # give xn, lam_n, calculate the equilibrium
+        calculate_NE()
+        # 现在我们得到了一个新的NE，我们应该把这个NE设为参照值
+        set_oldValue()
+        outer_loop_count = outer_loop_count + 1
+        result_plt.append(g_ex[0][0])
+        result_plt1.append(g_ex[1][0])
+        result_plt2.append(g_ex[0][0] + g_ex[1][0])
+        result_plt3.append(g_ex[2][0])
+        result_plt4.append(g_ex[1][1])
+        result_plt5.append(g_ex[3][0])
+        result_plt6.append(g_ex[1][2])
+        # set all value in g_ex to zero
+        g_ex = [[0] * len(sublist) for sublist in g_ex]
+    plt.plot(result_plt, label='0->1')
+    plt.plot(result_plt1, '.', label='1->0')
+    plt.plot(result_plt2, '*', label='diff')
+    plt.plot(result_plt3, label='2->1')
+    plt.plot(result_plt4, label='1->2')
+    plt.plot(result_plt5, label='3->1')
+    plt.plot(result_plt6, label='1->3')
+    plt.legend(loc='best')
+    plt.savefig('5-node-IES.svg')
+
+
+if __name__ == '__main__':
+    all_players = factory()
+    g_players = all_players[:player_num]
+    g_playerN1 = all_players[player_num]
+    start()
